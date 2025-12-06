@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 聖誕交換禮物 (連線版) 🎁</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* 樣式保持原有的聖誕風格 */
+        :root { --primary: #D42426; --gold: #F8B229; }
+        body {
+            margin: 0; font-family: 'Microsoft JhengHei', sans-serif;
+            background: url('https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=2069&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        body::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 20, 10, 0.65); z-index: 0; }
+        .container {
+            position: relative; background: rgba(255, 255, 255, 0.95);
+            padding: 2rem; border-radius: 20px; width: 90%; max-width: 450px;
+            text-align: center; z-index: 10; border: 4px solid var(--primary);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        h1 { color: var(--primary); margin: 0 0 10px 0; font-weight: 900; }
+        input { width: 88%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem; }
+        button {
+            background: var(--primary); color: white; border: none; padding: 14px;
+            border-radius: 10px; cursor: pointer; font-size: 1rem; width: 100%;
+            margin-top: 15px; font-weight: bold; transition: 0.2s;
+        }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .list-area { margin-top: 15px; text-align: left; max-height: 200px; overflow-y: auto; border-top: 2px dashed #ccc; padding-top: 10px; }
+        .tag { background: #0f4224; color: #fff; padding: 5px 12px; border-radius: 20px; display: inline-block; margin: 4px; font-size: 0.9rem; }
+        .my-tag { border: 2px solid var(--gold); background: #1a5e32; font-weight: bold; } /* 標示自己 */
+        
+        .result-box { background: var(--primary); color: white; padding: 20px; border-radius: 15px; margin-top: 20px; border: 2px solid var(--gold); animation: popIn 0.5s ease; }
+        .loading { color: #fff; font-size: 1.2rem; margin-top: 10px; display: none; }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <h1>聖誕交換禮物</h1>
+    <p id="statusText">正在連線伺服器...</p>
+
+    <div id="step1">
+        <div id="joinForm">
+            <input type="text" id="myName" placeholder="你的名字 (例: Tony)">
+            <input type="text" id="myDesc" placeholder="形容詞 (例: 寫扣很累的)">
+            <button onclick="joinGame()" id="joinBtn">🎅 加入房間</button>
+        </div>
+        
+        <div id="waitingArea" class="hidden">
+            <h3 style="color:var(--gold);">等待其他人加入...</h3>
+            <p>你是：<span id="displayMyName" style="font-weight:bold;"></span></p>
+        </div>
+
+        <div class="list-area" id="listArea"></div>
+
+        <button class="secondary hidden" id="adminStartBtn" onclick="hostStartGame()" style="background:var(--gold); color:#000;">
+            👑 主持人按此開始抽獎
+        </button>
+    </div>
+
+    <div id="step2" class="hidden">
+        <h2>🎉 配對完成！</h2>
+        <div id="myResult" class="result-box hidden">
+            <p style="opacity:0.9; margin:0;">你需要準備禮物送給：</p>
+            <div id="targetDesc" style="font-size:1.1rem; margin-top:10px;"></div>
+            <h1 id="targetName" style="font-size:2.5rem; margin:5px 0; text-shadow: 2px 2px 0 rgba(0,0,0,0.2);"></h1>
+        </div>
+        
+        <div id="notInGameMsg" class="hidden">
+            <p>😢 哎呀！你似乎沒有在這次的名單中。<br>可能是遊戲開始後你才進來。</p>
+        </div>
+        
+        <button onclick="resetGame()" style="margin-top:20px; background:#555;">🔄 重置遊戲 (危險)</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // TODO: 這裡填入你的 Firebase Config
+    // ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
+  authDomain: "christmas-exchange-ed1d8.firebaseapp.com",
+  databaseURL: "https://christmas-exchange-ed1d8-default-rtdb.firebaseio.com",
+  projectId: "christmas-exchange-ed1d8",
+  storageBucket: "christmas-exchange-ed1d8.firebasestorage.app",
+  messagingSenderId: "262833174996",
+  appId: "1:262833174996:web:627a2d84cc3eff11e7fe41"
+};
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // 定義資料庫路徑 (References)
+    const participantsRef = db.ref('participants');
+    const assignmentsRef = db.ref('assignments');
+    const statusRef = db.ref('status'); // 'waiting' or 'finished'
+
+    // 本地狀態
+    let myId = localStorage.getItem('christmas_uid'); // 類似 Android SharedPref 存 ID
+    let myNameLocal = localStorage.getItem('christmas_name');
+    let allUsers = [];
+
+    // ==========================================
+    // 1. 初始化與監聽 (類似 Android 的 onCreate + LiveData Observer)
+    // ==========================================
+    
+    // 監聽參加者列表變動
+    participantsRef.on('value', (snapshot) => {
+        const listDiv = document.getElementById('listArea');
+        listDiv.innerHTML = '';
+        allUsers = [];
+        
+        const data = snapshot.val();
+        if (data) {
+            Object.keys(data).forEach(key => {
+                const u = data[key];
+                allUsers.push({ id: key, ...u });
+                
+                // 渲染列表 UI
+                const span = document.createElement('span');
+                span.className = 'tag';
+                if(key === myId) span.classList.add('my-tag'); // 標記自己
+                span.innerText = `${u.desc} ${u.name}`;
+                listDiv.appendChild(span);
+            });
+        }
+        
+        // 檢查是否可以開始 (至少2人)
+        const startBtn = document.getElementById('adminStartBtn');
+        if (allUsers.length >= 2) {
+            startBtn.classList.remove('hidden');
+        } else {
+            startBtn.classList.add('hidden');
+        }
+    });
+
+    // 監聽遊戲狀態與結果
+    assignmentsRef.on('value', (snapshot) => {
+        const assignments = snapshot.val();
+        if (assignments) {
+            // 遊戲已結束，顯示結果
+            showResult(assignments);
+        } else {
+            // 遊戲尚未開始或已重置
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('statusText').innerText = "🎅 等待大家加入中...";
+        }
+    });
+
+    // 自動登入檢查
+    checkLoginState();
+
+    // ==========================================
+    // 2. 使用者操作邏輯
+    // ==========================================
+
+    function checkLoginState() {
+        if (myId && myNameLocal) {
+            // 已經登入過
+            document.getElementById('joinForm').classList.add('hidden');
+            document.getElementById('waitingArea').classList.remove('hidden');
+            document.getElementById('displayMyName').innerText = myNameLocal;
+        }
+    }
+
+    function joinGame() {
+        const name = document.getElementById('myName').value.trim();
+        const desc = document.getElementById('myDesc').value.trim();
+        
+        if (!name || !desc) return alert("請輸入完整資訊！");
+
+        // 檢查名字是否重複 (簡易檢查，多人同時送出可能有 Race Condition，但在這場景可忽略)
+        if (allUsers.some(u => u.name === name)) return alert("這個名字有人用過了！");
+
+        // 產生新的 Key (push)
+        const newRef = participantsRef.push();
+        myId = newRef.key;
+        myNameLocal = name;
+
+        // 寫入資料庫
+        newRef.set({ name, desc }).then(() => {
+            // 寫入本地緩存
+            localStorage.setItem('christmas_uid', myId);
+            localStorage.setItem('christmas_name', name);
+            checkLoginState();
+        }).catch(err => alert("連線錯誤: " + err.message));
+    }
+
+    // ==========================================
+    // 3. 主持人邏輯 (只有一個人按就好，實際上這段code每個人都有)
+    // ==========================================
+
+    function hostStartGame() {
+        if (!confirm("確定所有人都加入了嗎？要開始抽獎並同步給所有人囉！")) return;
+
+        // 演算法：Derangement (錯排)
+        let givers = [...allUsers];
+        let receivers = [...allUsers];
+        let isValid = false;
+
+        // 在 Client 端計算好結果
+        while (!isValid) {
+            receivers.sort(() => Math.random() - 0.5);
+            isValid = !givers.some((u, i) => u.id === receivers[i].id);
+        }
+
+        // 建構結果物件 Map<GiverID, ReceiverObject>
+        let resultMap = {};
+        givers.forEach((giver, i) => {
+            resultMap[giver.id] = receivers[i];
+        });
+
+        // 寫入資料庫 'assignments' 節點 -> 觸發所有人的 onValue 監聽
+        assignmentsRef.set(resultMap);
+    }
+
+    // ==========================================
+    // 4. 顯示結果邏輯
+    // ==========================================
+
+    function showResult(assignments) {
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('statusText').innerText = "🎁 抽獎完成！快看下面！";
+
+        if (myId && assignments[myId]) {
+            // 找到屬於我的結果
+            const target = assignments[myId];
+            document.getElementById('myResult').classList.remove('hidden');
+            document.getElementById('notInGameMsg').classList.add('hidden');
+            
+            document.getElementById('targetDesc').innerText = "一位 " + target.desc + "...";
+            document.getElementById('targetName').innerText = target.name;
+        } else {
+            // 我不在名單內 (可能只是路人或後來才開網頁)
+            document.getElementById('myResult').classList.add('hidden');
+            document.getElementById('notInGameMsg').classList.remove('hidden');
+        }
+    }
+
+    function resetGame() {
+        if(confirm("這會清除所有抽獎結果和參加者名單，確定嗎？")) {
+            participantsRef.remove();
+            assignmentsRef.remove();
+            localStorage.clear(); // 清除本地紀錄
+            location.reload();
+        }
+    }
+</script>
+</body>
+</html>
