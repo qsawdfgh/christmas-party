@@ -51,6 +51,17 @@
             animation: float 6s ease-in-out infinite;
         }
 
+		/* 手機專用優化 (螢幕小於 480px 時) */
+		@media (max-width: 480px) {
+    		.container {
+        		/* 手機上讓卡片稍微寬一點，視覺比較平衡 */
+        		width: 90%; 
+        
+        		/* 手機上 padding 改小一點，爭取文字空間 */
+        		padding: 1.5rem; 
+    		}
+		}
+
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
         h1 { 
