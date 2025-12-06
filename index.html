@@ -151,16 +151,23 @@
 
 <script>
     // ==========================================
-    // 🔴 請填入你的 Firebase Config
+    // 1. 權限設定 (Intent Extra)
+    // ==========================================
+    const urlParams = new URLSearchParams(window.location.search);
+    // 只有網址後面有 ?admin=true 的人才是主持人
+    const isAdmin = urlParams.get('admin') === 'true';
+
+    // ==========================================
+    // 2. Firebase Config (請填入你的)
     // ==========================================
     const firebaseConfig = {
-  	apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
-  	authDomain: "christmas-exchange-ed1d8.firebaseapp.com",
-  	databaseURL: "https://christmas-exchange-ed1d8-default-rtdb.firebaseio.com",
-  	projectId: "christmas-exchange-ed1d8",
-  	storageBucket: "christmas-exchange-ed1d8.firebasestorage.app",
-  	messagingSenderId: "262833174996",
-  	appId: "1:262833174996:web:627a2d84cc3eff11e7fe41"
+  		apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
+  		authDomain: "christmas-exchange-ed1d8.firebaseapp.com",
+	  	databaseURL: "https://christmas-exchange-ed1d8-default-rtdb.firebaseio.com",
+  		projectId: "christmas-exchange-ed1d8",
+  		storageBucket: "christmas-exchange-ed1d8.firebasestorage.app",
+  		messagingSenderId: "262833174996",
+  		appId: "1:262833174996:web:627a2d84cc3eff11e7fe41"
 	};
 
     if (!firebase.apps.length) {
@@ -174,6 +181,9 @@
     let myNameLocal = localStorage.getItem('christmas_name');
     let allUsers = [];
 
+    // ==========================================
+    // 3. 監聽邏輯 (含權限控制)
+    // ==========================================
     participantsRef.on('value', (snapshot) => {
         const listDiv = document.getElementById('listArea');
         listDiv.innerHTML = '';
@@ -201,6 +211,7 @@
             });
         }
         
+        // 幽靈帳號檢查
         if (myId && !myIdExistsOnServer) {
             localStorage.clear();
             location.reload();
@@ -210,9 +221,17 @@
         const startBtn = document.getElementById('adminStartBtn');
         const statusText = document.getElementById('statusText');
         
+        // 🔴 權限控制核心
         if (allUsers.length >= 2) {
-            startBtn.classList.remove('hidden');
-            statusText.innerText = `目前有 ${allUsers.length} 人參加`;
+            if (isAdmin) {
+                // 是主持人 -> 顯示按鈕
+                startBtn.classList.remove('hidden');
+                statusText.innerText = `你是主持人 | 目前 ${allUsers.length} 人`;
+            } else {
+                // 死老百姓 -> 隱藏按鈕
+                startBtn.classList.add('hidden');
+                statusText.innerText = `目前 ${allUsers.length} 人已就位，等待主持人開始...`;
+            }
         } else {
             startBtn.classList.add('hidden');
             statusText.innerText = "等待大家加入中... (至少需要2人)";
@@ -231,6 +250,9 @@
 
     checkLoginState();
 
+    // ==========================================
+    // 4. 其他功能函式
+    // ==========================================
     function checkLoginState() {
         if (myId && myNameLocal) {
             document.getElementById('joinForm').classList.add('hidden');
@@ -257,6 +279,7 @@
     }
 
     function hostStartGame() {
+        if (!isAdmin) return; // 再次防呆
         if (!confirm("確定所有人都加入了嗎？要開始抽獎囉！")) return;
 
         let givers = [...allUsers];
@@ -285,16 +308,24 @@
             const target = assignments[myId];
             document.getElementById('myResult').classList.remove('hidden');
             document.getElementById('notInGameMsg').classList.add('hidden');
-            
             document.getElementById('targetDesc').innerText = "一位 " + target.desc;
             document.getElementById('targetName').innerText = target.name;
         } else {
             document.getElementById('myResult').classList.add('hidden');
             document.getElementById('notInGameMsg').classList.remove('hidden');
         }
+
+        // 🔴 重置按鈕權限控制
+        const resetBtn = document.querySelector('button.danger');
+        if (isAdmin) {
+            resetBtn.classList.remove('hidden');
+        } else {
+            resetBtn.classList.add('hidden');
+        }
     }
 
     function resetGame() {
+        if (!isAdmin) return;
         if(confirm("確定要開始新的一局嗎？\n這會把所有人都踢回首頁重新輸入！")) {
             participantsRef.remove();
             assignmentsRef.remove();
@@ -303,6 +334,7 @@
         }
     }
 
+    // 雪花特效 (保持不變)
     setInterval(()=>{
         const s = document.createElement('div');
         s.className = 'snowflake';
