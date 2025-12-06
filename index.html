@@ -7,121 +7,176 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
-        :root { --primary: #D42426; --gold: #B8860B; --dark: #333; }
+        :root { 
+            --primary: #C41E3A; 
+            --green: #165B33; 
+            --gold: #D4AF37; 
+            --glass: rgba(255, 255, 255, 0.85);
+        }
         
         body {
-            margin: 0; font-family: 'Microsoft JhengHei', sans-serif;
-            background: url('https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=2069&auto=format&fit=crop') no-repeat center center fixed;
+            margin: 0; 
+            font-family: 'Noto Sans TC', sans-serif;
+            background: url('https://images.unsplash.com/photo-1576919228236-a097c32a58be?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            position: relative; overflow-x: hidden;
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            position: relative; 
+            overflow-x: hidden;
         }
-        body::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 20, 10, 0.75); z-index: 0; }
+
+        body::before { 
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0, 0, 0, 0.4); z-index: 0; 
+        }
 
         .container {
-            position: relative; background: rgba(255, 255, 255, 0.95);
-            padding: 2rem; border-radius: 20px; width: 90%; max-width: 450px;
-            text-align: center; z-index: 10; border: none;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
+            position: relative; 
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem; 
+            border-radius: 24px; 
+            width: 85%; 
+            max-width: 420px;
+            text-align: center; 
+            z-index: 10; 
+            border: 2px solid rgba(255,255,255,0.6);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            animation: float 6s ease-in-out infinite;
         }
 
-        h1 { color: var(--primary); margin: 0 0 10px 0; font-weight: 900; }
-        p { color: #555; font-weight: 600; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
-        input { width: 85%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        input:focus { border-color: var(--primary); outline: none; }
+        h1 { 
+            color: var(--primary); margin: 0 0 5px 0; font-weight: 900; 
+            letter-spacing: 2px; text-shadow: 2px 2px 0 #fff;
+        }
+        
+        .sub-title { color: var(--green); font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; }
+
+        input { 
+            width: 88%; padding: 14px; margin: 8px 0; 
+            border: 2px solid #fff; border-radius: 12px; font-size: 1rem; 
+            background: rgba(255,255,255,0.9); transition: 0.3s;
+        }
+        input:focus { border-color: var(--green); outline: none; box-shadow: 0 0 10px rgba(22, 91, 51, 0.2); }
 
         button {
-            background: var(--primary); color: white; border: none; padding: 14px;
+            background: linear-gradient(135deg, var(--primary), #a01830); 
+            color: white; border: none; padding: 15px;
             border-radius: 50px; cursor: pointer; font-size: 1.1rem; width: 100%;
-            margin-top: 15px; font-weight: bold; transition: 0.2s;
-            box-shadow: 0 5px 15px rgba(212, 36, 38, 0.4);
+            margin-top: 15px; font-weight: bold; 
+            box-shadow: 0 5px 15px rgba(196, 30, 58, 0.4);
+            border: 2px solid white; transition: transform 0.1s;
         }
-        button:active { transform: scale(0.98); box-shadow: none; }
-        button:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-        button.secondary { background: #F8B229; color: #333; box-shadow: 0 5px 15px rgba(248, 178, 41, 0.4); }
-        button.danger { background: #555; font-size: 0.9rem; margin-top:30px; box-shadow: none; }
+        button:active { transform: scale(0.96); }
+        button.secondary { background: linear-gradient(135deg, var(--gold), #b8962e); color: #fff; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        button.danger { background: #666; font-size: 0.9rem; margin-top:30px; box-shadow: none; opacity: 0.8; }
 
-        .list-area { margin-top: 15px; text-align: left; max-height: 200px; overflow-y: auto; border-top: 2px dashed #eee; padding-top: 15px; }
-        .tag { background: #f0f0f0; color: #333; padding: 6px 14px; border-radius: 20px; display: inline-block; margin: 4px; font-size: 0.9rem; border: 1px solid #ddd; }
-        .my-tag { background: #fff0f0; color: var(--primary); border: 1px solid #ffcccc; font-weight: bold; }
+        .list-area { 
+            margin-top: 20px; text-align: left; max-height: 220px; overflow-y: auto; 
+            border-top: 2px dashed #ccc; padding-top: 15px; 
+        }
+        .tag { 
+            background: white; color: var(--green); 
+            padding: 6px 14px; border-radius: 20px; display: inline-block; 
+            margin: 4px; font-size: 0.9rem; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .my-tag { background: var(--primary); color: white; }
 
-        /* ✨ 全新的結果卡片設計 (重點修改) ✨ */
+        /* ✨ 禮物結果卡片 ✨ */
         .result-box { 
-            background: #fffbf0; /* 米白色卡紙 */
+            background: white;
+            background-image: radial-gradient(#f3e5f5 10%, transparent 11%), radial-gradient(#f3e5f5 10%, transparent 11%);
+            background-size: 20px 20px;
             color: #333; 
-            padding: 30px 20px; 
-            border-radius: 12px; 
+            padding: 40px 20px; 
+            border-radius: 16px; 
             margin-top: 25px; 
-            /* 雙層邊框設計 */
-            border: 4px solid var(--primary); 
-            outline: 2px dashed var(--primary);
-            outline-offset: -10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid var(--gold); 
             position: relative;
-            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: popIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
-        /* 裝飾用的蝴蝶結 */
-        .result-box::before {
-            content: '🎀'; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 3rem;
+        .result-box::after {
+            content: 'TO:'; position: absolute; top: 15px; left: 15px; 
+            font-size: 1rem; color: #999; font-weight: bold;
         }
 
-        /* 提示文字 */
-        .hint-text {
-            color: #555; font-size: 1rem; font-weight: normal; margin-bottom: 5px; letter-spacing: 1px;
+        .bow {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            font-size: 4rem; text-shadow: 0 5px 10px rgba(0,0,0,0.2);
         }
 
-        /* 形容詞 */
-        #targetDesc {
-            font-size: 1.2rem; color: var(--gold); font-weight: bold; margin-top: 10px;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-
-        /* 名字 */
-        #targetName {
-            color: var(--primary); font-size: 3rem; margin: 5px 0 15px 0; 
-            font-weight: 900; line-height: 1.1;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.05); /* 微微立體感 */
+        /* 調整說明文字樣式，讓它跟名字有區隔 */
+        #targetDesc { 
+            font-size: 1.1rem; 
+            color: #555; 
+            font-weight: bold; 
+            margin-top: 25px; 
+            line-height: 1.6;
         }
         
-        /* 截圖提示 */
+        /* 強調形容詞 */
+        .highlight-desc {
+            color: var(--primary);
+            font-size: 1.3rem;
+            background: #fff0f0;
+            padding: 2px 8px;
+            border-radius: 5px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        #targetName { 
+            color: var(--primary); font-size: 3.2rem; margin: 5px 0 20px 0; 
+            font-weight: 900; line-height: 1.1; letter-spacing: -1px;
+            word-break: break-all;
+        }
+
         .screenshot-hint {
-            font-size: 0.85rem; color: #999; border-top: 1px solid #eee; 
-            padding-top: 10px; display: inline-block; width: 80%;
+            background: #f0f0f0; border-radius: 8px; padding: 8px;
+            font-size: 0.8rem; color: #666; display: inline-block;
         }
 
-        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.5) rotate(-10deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
         .hidden { display: none !important; }
-        .lights { position: fixed; top: 0; width: 100%; height: 20px; display: flex; justify-content: center; gap: 20px; z-index: 1; pointer-events: none; }
-        .light { width: 15px; height: 15px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 10px #ff3b3b; animation: flash 2s infinite alternate; }
-        .light:nth-child(even) { background: #ffd700; box-shadow: 0 0 10px #ffd700; animation-delay: 1s; }
-        .light:nth-child(3n) { background: #00ff00; box-shadow: 0 0 10px #00ff00; animation-delay: 0.5s; }
-        @keyframes flash { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
-        .snowflake { position: fixed; top: -10px; color: white; animation: fall linear forwards; z-index: 1; pointer-events: none; }
-        @keyframes fall { to { transform: translateY(105vh); } }
+        
+        .lights { position: fixed; top: 0; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 5; pointer-events: none; }
+        .light { width: 12px; height: 12px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 15px #ff3b3b; animation: flash 1.5s infinite alternate; margin-top: -5px; position: relative;}
+        .light::before { content: ''; position: absolute; top: -20px; left: 5px; width: 2px; height: 20px; background: #333; }
+        .light:nth-child(even) { background: #ffd700; box-shadow: 0 0 15px #ffd700; animation-delay: 0.5s; }
+        .light:nth-child(3n) { background: #26b85d; box-shadow: 0 0 15px #26b85d; animation-delay: 1s; }
+        @keyframes flash { 0% { opacity: 0.3; } 100% { opacity: 1; transform: scale(1.2); } }
+        .snowflake { position: fixed; top: -10px; color: #fff; text-shadow: 0 0 5px #fff; z-index: 2; pointer-events: none; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="lights"><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div></div>
+<div class="lights"><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div></div>
 
 <div class="container" id="app">
     <h1>聖誕交換禮物</h1>
-    <p id="statusText" style="font-size:0.9rem; color:#888;">正在連線伺服器...</p>
+    <div class="sub-title">Christmas Gift Exchange 2025</div>
+    <p id="statusText" style="font-size:0.9rem; color:#666;">🎄 正在連線北極伺服器...</p>
 
     <div id="step1">
         <div id="joinForm">
-            <input type="text" id="myName" placeholder="你的名字 (例: Tony)">
-            <input type="text" id="myDesc" placeholder="形容詞描述妳想收到的禮物 (例: 療癒的)">
-            <button onclick="joinGame()" id="joinBtn">🎅 加入房間</button>
+            <input type="text" id="myName" placeholder="你的暱稱 (例: Tony)">
+            <input type="text" id="myDesc" placeholder="許願禮物形容詞 (例: 實用的)">
+            <button onclick="joinGame()" id="joinBtn">🎅 進入小屋</button>
         </div>
         
         <div id="waitingArea" class="hidden">
-            <h3 style="color:#d4af37; margin-bottom:5px;">等待其他人加入...</h3>
-            <p style="margin:0; color:#555;">你是：<span id="displayMyName" style="font-weight:bold; color:var(--primary);"></span></p>
+            <h3 style="color:var(--gold); margin-bottom:5px;">等待其他人到齊...</h3>
+            <p style="margin:0; color:#555;">你的身份：<span id="displayMyName" style="font-weight:bold; color:var(--primary);"></span></p>
         </div>
 
         <div class="list-area" id="listArea"></div>
@@ -132,33 +187,28 @@
     </div>
 
     <div id="step2" class="hidden">
-        <h2 style="color:#333;">🎉 配對完成！</h2>
+        <h2 style="color:var(--primary); margin-top:0;">🎉 配對完成！</h2>
         
         <div id="myResult" class="result-box hidden">
-            <div class="hint-text">你需要準備禮物送給：</div>
+            <div class="bow">🎁</div>
+            
             <div id="targetDesc"></div>
+            
             <h1 id="targetName"></h1>
-            <div class="screenshot-hint">( 請截圖保存結果 📸 )</div>
+            <div class="screenshot-hint">📸 請截圖保存，別告訴其他人喔！</div>
         </div>
         
         <div id="notInGameMsg" class="hidden">
             <p>😢 哎呀！你似乎沒有在這次的名單中。<br>可能是遊戲開始後你才進來。</p>
         </div>
         
-        <button class="danger" onclick="resetGame()">🔄 開始新的一局 (重置所有人)</button>
+        <button class="danger" onclick="resetGame()">🔄 重新開始 (Reset Game)</button>
     </div>
 </div>
 
 <script>
     // ==========================================
-    // 1. 權限設定 (Intent Extra)
-    // ==========================================
-    const urlParams = new URLSearchParams(window.location.search);
-    // 只有網址後面有 ?admin=true 的人才是主持人
-    const isAdmin = urlParams.get('admin') === 'true';
-
-    // ==========================================
-    // 2. Firebase Config (請填入你的)
+    // ⚠️ 請在此處貼上你的 Firebase Config ⚠️
     // ==========================================
     const firebaseConfig = {
   		apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
@@ -171,88 +221,88 @@
 	};
 
     if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+        if(firebaseConfig.apiKey) firebase.initializeApp(firebaseConfig);
+        else console.error("請記得填寫 Firebase Config!");
     }
-    const db = firebase.database();
-    const participantsRef = db.ref('participants');
-    const assignmentsRef = db.ref('assignments');
+    
+    let db, participantsRef, assignmentsRef;
+    if(firebase.apps.length) {
+        db = firebase.database();
+        participantsRef = db.ref('participants');
+        assignmentsRef = db.ref('assignments');
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('admin') === 'true';
 
     let myId = localStorage.getItem('christmas_uid');
     let myNameLocal = localStorage.getItem('christmas_name');
     let allUsers = [];
 
-    // ==========================================
-    // 3. 監聽邏輯 (含權限控制)
-    // ==========================================
-    participantsRef.on('value', (snapshot) => {
-        const listDiv = document.getElementById('listArea');
-        listDiv.innerHTML = '';
-        allUsers = [];
-        
-        const data = snapshot.val();
-        let myIdExistsOnServer = false;
+    if(participantsRef) {
+        participantsRef.on('value', (snapshot) => {
+            const listDiv = document.getElementById('listArea');
+            listDiv.innerHTML = '';
+            allUsers = [];
+            
+            const data = snapshot.val();
+            let myIdExistsOnServer = false;
 
-        if (data) {
-            Object.keys(data).forEach(key => {
-                const u = data[key];
-                allUsers.push({ id: key, ...u });
-                if (key === myId) myIdExistsOnServer = true;
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    const u = data[key];
+                    allUsers.push({ id: key, ...u });
+                    if (key === myId) myIdExistsOnServer = true;
 
-                const span = document.createElement('span');
-                span.className = 'tag';
-                if(key === myId) span.classList.add('my-tag');
-                
-                if (key === myId) {
-                    span.innerText = `${u.desc} ${u.name} (你)`; 
-                } else {
-                    span.innerText = `❄️ ${u.name}`; 
-                }
-                listDiv.appendChild(span);
-            });
-        }
-        
-        // 幽靈帳號檢查
-        if (myId && !myIdExistsOnServer) {
-            localStorage.clear();
-            location.reload();
-            return;
-        }
-
-        const startBtn = document.getElementById('adminStartBtn');
-        const statusText = document.getElementById('statusText');
-        
-        // 🔴 權限控制核心
-        if (allUsers.length >= 2) {
-            if (isAdmin) {
-                // 是主持人 -> 顯示按鈕
-                startBtn.classList.remove('hidden');
-                statusText.innerText = `你是主持人 | 目前 ${allUsers.length} 人`;
-            } else {
-                // 死老百姓 -> 隱藏按鈕
-                startBtn.classList.add('hidden');
-                statusText.innerText = `目前 ${allUsers.length} 人已就位，等待主持人開始...`;
+                    const span = document.createElement('span');
+                    span.className = 'tag';
+                    if(key === myId) span.classList.add('my-tag');
+                    
+                    if (key === myId) {
+                        span.innerText = `⛄ ${u.name}`; 
+                    } else {
+                        span.innerText = `❄️ ${u.name}`; 
+                    }
+                    listDiv.appendChild(span);
+                });
             }
-        } else {
-            startBtn.classList.add('hidden');
-            statusText.innerText = "等待大家加入中... (至少需要2人)";
-        }
-    });
+            
+            if (myId && !myIdExistsOnServer) {
+                localStorage.clear();
+                location.reload();
+                return;
+            }
 
-    assignmentsRef.on('value', (snapshot) => {
-        const assignments = snapshot.val();
-        if (assignments) {
-            showResult(assignments);
-        } else {
-            document.getElementById('step1').classList.remove('hidden');
-            document.getElementById('step2').classList.add('hidden');
-        }
-    });
+            const startBtn = document.getElementById('adminStartBtn');
+            const statusText = document.getElementById('statusText');
+            
+            if (allUsers.length >= 2) {
+                if (isAdmin) {
+                    startBtn.classList.remove('hidden');
+                    statusText.innerText = `你是主持人 | 目前 ${allUsers.length} 人`;
+                } else {
+                    startBtn.classList.add('hidden');
+                    statusText.innerText = `目前 ${allUsers.length} 人已就位，等待開始...`;
+                }
+            } else {
+                startBtn.classList.add('hidden');
+                statusText.innerText = "等待大家加入中... (至少需要2人)";
+            }
+        });
+
+        assignmentsRef.on('value', (snapshot) => {
+            const assignments = snapshot.val();
+            if (assignments) {
+                showResult(assignments);
+            } else {
+                document.getElementById('step1').classList.remove('hidden');
+                document.getElementById('step2').classList.add('hidden');
+            }
+        });
+    }
 
     checkLoginState();
 
-    // ==========================================
-    // 4. 其他功能函式
-    // ==========================================
     function checkLoginState() {
         if (myId && myNameLocal) {
             document.getElementById('joinForm').classList.add('hidden');
@@ -262,10 +312,11 @@
     }
 
     function joinGame() {
+        if(!db) return alert("請先在程式碼中填入 Firebase Config！");
         const name = document.getElementById('myName').value.trim();
         const desc = document.getElementById('myDesc').value.trim();
         if (!name || !desc) return alert("請輸入完整資訊！");
-        if (allUsers.some(u => u.name === name)) return alert("這個名字有人用過了！");
+        if (allUsers.some(u => u.name === name)) return alert("這個名字有人用過了，換一個吧！");
 
         const newRef = participantsRef.push();
         myId = newRef.key;
@@ -279,17 +330,21 @@
     }
 
     function hostStartGame() {
-        if (!isAdmin) return; // 再次防呆
+        if (!isAdmin) return;
         if (!confirm("確定所有人都加入了嗎？要開始抽獎囉！")) return;
 
         let givers = [...allUsers];
         let receivers = [...allUsers];
         let isValid = false;
 
-        while (!isValid) {
+        let attempts = 0;
+        while (!isValid && attempts < 1000) {
             receivers.sort(() => Math.random() - 0.5);
             isValid = !givers.some((u, i) => u.id === receivers[i].id);
+            attempts++;
         }
+
+        if(!isValid) return alert("配對失敗(人數太少或運氣不好)，請重試一次！");
 
         let resultMap = {};
         givers.forEach((giver, i) => {
@@ -299,23 +354,28 @@
         assignmentsRef.set(resultMap);
     }
 
+    // ==========================================
+    // ⬇️ 修改後的結果顯示邏輯 ⬇️
+    // ==========================================
     function showResult(assignments) {
         document.getElementById('step1').classList.add('hidden');
         document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('statusText').innerText = "🎁 抽獎完成！";
+        document.getElementById('statusText').innerText = "🎁 抽獎完成！快看看你抽到誰";
 
         if (myId && assignments[myId]) {
             const target = assignments[myId];
             document.getElementById('myResult').classList.remove('hidden');
             document.getElementById('notInGameMsg').classList.add('hidden');
-            document.getElementById('targetDesc').innerText = "一位 " + target.desc;
+            
+            // 使用 HTML 語法讓形容詞特別亮眼
+            const descHtml = `你需要準備<span class="highlight-desc">「${target.desc}」</span>禮物送給`;
+            document.getElementById('targetDesc').innerHTML = descHtml;
             document.getElementById('targetName').innerText = target.name;
         } else {
             document.getElementById('myResult').classList.add('hidden');
             document.getElementById('notInGameMsg').classList.remove('hidden');
         }
 
-        // 🔴 重置按鈕權限控制
         const resetBtn = document.querySelector('button.danger');
         if (isAdmin) {
             resetBtn.classList.remove('hidden');
@@ -326,26 +386,23 @@
 
     function resetGame() {
         if (!isAdmin) return;
-        if(confirm("確定要開始新的一局嗎？\n這會把所有人都踢回首頁重新輸入！")) {
+        if(confirm("警告：這會清除所有結果並強制所有人登出！確定要開始新的一局？")) {
             participantsRef.remove();
             assignmentsRef.remove();
-            localStorage.clear();
-            location.reload();
         }
     }
 
-    // 雪花特效 (保持不變)
     setInterval(()=>{
         const s = document.createElement('div');
         s.className = 'snowflake';
-        s.innerHTML = '❄';
+        s.innerHTML = ['❄', '❅', '❆'][Math.floor(Math.random()*3)];
         s.style.left = Math.random() * 100 + 'vw';
-        s.style.animationDuration = Math.random() * 3 + 3 + 's';
-        s.style.opacity = Math.random();
-        s.style.fontSize = Math.random() * 10 + 10 + 'px';
+        s.style.animationDuration = Math.random() * 3 + 5 + 's';
+        s.style.opacity = Math.random() * 0.5 + 0.3;
+        s.style.fontSize = Math.random() * 15 + 10 + 'px';
         document.body.appendChild(s);
-        setTimeout(() => s.remove(), 6000);
-    }, 300);
+        setTimeout(() => s.remove(), 8000);
+    }, 200);
 </script>
 </body>
 </html>
