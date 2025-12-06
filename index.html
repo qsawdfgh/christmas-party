@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎄 聖誕交換禮物 (連線版) 🎁</title>
+    <title>🎄 聖誕交換禮物 🎁🎁🎁 </title>
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -88,15 +88,15 @@
     // ==========================================
     // TODO: 這裡填入你的 Firebase Config
     // ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
-  authDomain: "christmas-exchange-ed1d8.firebaseapp.com",
-  databaseURL: "https://christmas-exchange-ed1d8-default-rtdb.firebaseio.com",
-  projectId: "christmas-exchange-ed1d8",
-  storageBucket: "christmas-exchange-ed1d8.firebasestorage.app",
-  messagingSenderId: "262833174996",
-  appId: "1:262833174996:web:627a2d84cc3eff11e7fe41"
-};
+    const firebaseConfig = {
+  	apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
+  	authDomain: "christmas-exchange-ed1d8.firebaseapp.com",
+  	databaseURL: "https://christmas-exchange-ed1d8-default-rtdb.firebaseio.com",
+  	projectId: "christmas-exchange-ed1d8",
+  	storageBucket: "christmas-exchange-ed1d8.firebasestorage.app",
+  	messagingSenderId: "262833174996",
+  	appId: "1:262833174996:web:627a2d84cc3eff11e7fe41"
+	};
 
     // 初始化 Firebase
     firebase.initializeApp(firebaseConfig);
@@ -132,7 +132,17 @@ const firebaseConfig = {
                 const span = document.createElement('span');
                 span.className = 'tag';
                 if(key === myId) span.classList.add('my-tag'); // 標記自己
-                span.innerText = `${u.desc} ${u.name}`;
+                // 🔴 原本是寫這樣：
+        	// span.innerText = `${u.desc} ${u.name}`;
+
+        	// 🟢 請改成這樣 (只顯示名字)：
+        	if (key === myId) {
+            	// 自己還是看得到自己的形容詞 (確認有沒有打錯)
+            		span.innerText = `${u.desc} ${u.name} (你自己)`; 
+        	} else {
+            	// 別人只看得到名字，保持神祕
+            		span.innerText = `❄️ ${u.name}`; 
+        	}
                 listDiv.appendChild(span);
             });
         }
