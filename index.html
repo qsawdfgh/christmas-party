@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        :root { --primary: #D42426; --gold: #F8B229; --dark-green: #0f4224; }
+        :root { --primary: #D42426; --gold: #FFD700; --dark-green: #0f4224; }
         
         body {
             margin: 0; font-family: 'Microsoft JhengHei', sans-serif;
@@ -20,12 +20,14 @@
         }
         body::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 20, 10, 0.7); z-index: 0; }
 
-        /* 聖誕燈飾 */
+        /* 燈飾與雪花 */
         .lights { position: fixed; top: 0; width: 100%; height: 20px; display: flex; justify-content: center; gap: 20px; z-index: 1; pointer-events: none; }
         .light { width: 15px; height: 15px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 10px #ff3b3b; animation: flash 2s infinite alternate; }
         .light:nth-child(even) { background: #ffd700; box-shadow: 0 0 10px #ffd700; animation-delay: 1s; }
         .light:nth-child(3n) { background: #00ff00; box-shadow: 0 0 10px #00ff00; animation-delay: 0.5s; }
         @keyframes flash { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+        .snowflake { position: fixed; top: -10px; color: white; animation: fall linear forwards; z-index: 1; pointer-events: none; }
+        @keyframes fall { to { transform: translateY(105vh); } }
 
         /* 主容器 */
         .container {
@@ -49,7 +51,6 @@
         }
         button:active { transform: translateY(4px); box-shadow: none; }
         button:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-        
         button.secondary { background: var(--gold); color: #333; box-shadow: 0 4px 0 #cca400; }
         button.danger { background: #555; box-shadow: 0 4px 0 #333; margin-top: 30px; font-size: 0.9rem; }
 
@@ -57,14 +58,39 @@
         .tag { background: #0f4224; color: #fff; padding: 5px 12px; border-radius: 20px; display: inline-block; margin: 4px; font-size: 0.9rem; border: 1px solid #ffd700; }
         .my-tag { background: #D42426; font-weight: bold; border: 2px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
 
-        .result-box { background: linear-gradient(135deg, #D42426, #a31618); color: white; padding: 20px; border-radius: 15px; margin-top: 20px; border: 2px solid var(--gold); animation: popIn 0.5s ease; }
-        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        /* 🔴 這裡修正了結果框的樣式 */
+        .result-box { 
+            /* 背景改成更深的紅色 */
+            background: linear-gradient(135deg, #8B0000, #500000); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 15px; 
+            margin-top: 20px; 
+            border: 3px solid var(--gold); /* 邊框加粗 */
+            animation: popIn 0.5s ease; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
 
-        .hidden { display: none !important; }
+        /* 🔴 針對名字做強化 */
+        #targetName {
+            color: var(--gold); /* 字體改金色 */
+            font-size: 2.8rem; 
+            margin: 15px 0; 
+            text-shadow: 2px 2px 0 #000; /* 黑色陰影 */
+            background: rgba(0, 0, 0, 0.3); /* 背後加一層半透明黑底 */
+            padding: 10px;
+            border-radius: 10px;
+            line-height: 1.2;
+        }
         
-        /* 雪花 */
-        .snowflake { position: fixed; top: -10px; color: white; animation: fall linear forwards; z-index: 1; pointer-events: none; }
-        @keyframes fall { to { transform: translateY(105vh); } }
+        #targetDesc {
+            font-size: 1.3rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -83,7 +109,7 @@
         </div>
         
         <div id="waitingArea" class="hidden">
-            <h3 style="color:var(--gold); margin-bottom:5px;">等待其他人加入...</h3>
+            <h3 style="color:#d4af37; margin-bottom:5px;">等待其他人加入...</h3>
             <p style="margin:0;">你是：<span id="displayMyName" style="font-weight:bold; color:var(--primary);"></span></p>
         </div>
 
@@ -98,8 +124,8 @@
         <h2>🎉 配對完成！</h2>
         <div id="myResult" class="result-box hidden">
             <p style="opacity:0.9; margin:0; font-size:0.9rem;">你需要準備禮物送給：</p>
-            <div id="targetDesc" style="font-size:1.2rem; margin-top:10px; font-weight:bold; color:#ffd700;"></div>
-            <h1 id="targetName" style="font-size:2.5rem; margin:5px 0; text-shadow: 2px 2px 0 rgba(0,0,0,0.2);"></h1>
+            <div id="targetDesc"></div>
+            <h1 id="targetName"></h1>
             <p style="font-size:0.8rem; margin-top:10px; opacity:0.8;">(請截圖保存結果)</p>
         </div>
         
@@ -113,7 +139,7 @@
 
 <script>
     // ==========================================
-    // 🔴 請在這裡填入你的 Firebase Config
+    // 🔴 請填入你的 Firebase Config
     // ==========================================
     const firebaseConfig = {
   	apiKey: "AIzaSyDsmR6x-yh6O7w7SPetrm6VdSHXN0mCeU0",
@@ -125,68 +151,51 @@
   	appId: "1:262833174996:web:627a2d84cc3eff11e7fe41"
 	};
 
-    // 初始化 Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
-    
-    // 資料庫路徑
     const participantsRef = db.ref('participants');
     const assignmentsRef = db.ref('assignments');
 
-    // 本地狀態
     let myId = localStorage.getItem('christmas_uid');
     let myNameLocal = localStorage.getItem('christmas_name');
     let allUsers = [];
 
-    // ==========================================
-    // 1. 初始化與即時監聽 (Core Logic)
-    // ==========================================
-    
-    // 監聽參加者列表 (包含隱私隱藏 logic & 自動重置 logic)
     participantsRef.on('value', (snapshot) => {
         const listDiv = document.getElementById('listArea');
         listDiv.innerHTML = '';
         allUsers = [];
         
         const data = snapshot.val();
-        let myIdExistsOnServer = false; // 🚩 標記：我在伺服器上還活著嗎？
+        let myIdExistsOnServer = false;
 
         if (data) {
             Object.keys(data).forEach(key => {
                 const u = data[key];
                 allUsers.push({ id: key, ...u });
-                
-                // 檢查伺服器上是否有我的 ID
                 if (key === myId) myIdExistsOnServer = true;
 
-                // 建立顯示標籤
                 const span = document.createElement('span');
                 span.className = 'tag';
                 if(key === myId) span.classList.add('my-tag');
                 
-                // --- 隱私邏輯：隱藏別人的形容詞 ---
                 if (key === myId) {
                     span.innerText = `${u.desc} ${u.name} (你)`; 
                 } else {
-                    span.innerText = `❄️ ${u.name}`; // 別人看不到形容詞
+                    span.innerText = `❄️ ${u.name}`; 
                 }
                 listDiv.appendChild(span);
             });
         }
         
-        // 🚩 關鍵修復：自動登出邏輯 (Zombie User Check)
-        // 如果我有本地 ID (以為自己登入了)，但 Server 上根本沒我 (被重置了)
-        // -> 強制清除本地資料，重新載入
         if (myId && !myIdExistsOnServer) {
-            console.log("偵測到遊戲重置，自動登出...");
+            console.log("偵測到重置，自動登出");
             localStorage.clear();
             location.reload();
             return;
         }
 
-        // 主持人按鈕顯示邏輯
         const startBtn = document.getElementById('adminStartBtn');
         const statusText = document.getElementById('statusText');
         
@@ -199,24 +208,17 @@
         }
     });
 
-    // 監聽配對結果
     assignmentsRef.on('value', (snapshot) => {
         const assignments = snapshot.val();
         if (assignments) {
-            // 有結果 -> 顯示結果頁
             showResult(assignments);
         } else {
-            // 沒結果 -> 顯示大廳 (除非被上面的 Zombie Check 踢出去)
             document.getElementById('step1').classList.remove('hidden');
             document.getElementById('step2').classList.add('hidden');
         }
     });
 
     checkLoginState();
-
-    // ==========================================
-    // 2. 使用者操作
-    // ==========================================
 
     function checkLoginState() {
         if (myId && myNameLocal) {
@@ -229,7 +231,6 @@
     function joinGame() {
         const name = document.getElementById('myName').value.trim();
         const desc = document.getElementById('myDesc').value.trim();
-        
         if (!name || !desc) return alert("請輸入完整資訊！");
         if (allUsers.some(u => u.name === name)) return alert("這個名字有人用過了！");
 
@@ -244,10 +245,6 @@
         }).catch(err => alert("連線錯誤: " + err.message));
     }
 
-    // ==========================================
-    // 3. 主持人與演算法
-    // ==========================================
-
     function hostStartGame() {
         if (!confirm("確定所有人都加入了嗎？要開始抽獎囉！")) return;
 
@@ -255,41 +252,32 @@
         let receivers = [...allUsers];
         let isValid = false;
 
-        // Derangement 演算法 (確保不抽到自己)
         while (!isValid) {
             receivers.sort(() => Math.random() - 0.5);
             isValid = !givers.some((u, i) => u.id === receivers[i].id);
         }
 
-        // 建立結果 Map
         let resultMap = {};
         givers.forEach((giver, i) => {
             resultMap[giver.id] = receivers[i];
         });
 
-        // 寫入 Firebase (觸發所有人畫面更新)
         assignmentsRef.set(resultMap);
     }
-
-    // ==========================================
-    // 4. 結果與重置
-    // ==========================================
 
     function showResult(assignments) {
         document.getElementById('step1').classList.add('hidden');
         document.getElementById('step2').classList.remove('hidden');
-        document.getElementById('statusText').innerText = "🎁 抽獎完成！快看結果！";
+        document.getElementById('statusText').innerText = "🎁 抽獎完成！";
 
         if (myId && assignments[myId]) {
             const target = assignments[myId];
             document.getElementById('myResult').classList.remove('hidden');
             document.getElementById('notInGameMsg').classList.add('hidden');
             
-            // 揭曉結果
             document.getElementById('targetDesc').innerText = "一位 " + target.desc;
             document.getElementById('targetName').innerText = target.name;
         } else {
-            // 旁觀者模式
             document.getElementById('myResult').classList.add('hidden');
             document.getElementById('notInGameMsg').classList.remove('hidden');
         }
@@ -297,19 +285,13 @@
 
     function resetGame() {
         if(confirm("確定要開始新的一局嗎？\n這會把所有人都踢回首頁重新輸入！")) {
-            // 清空 Firebase -> 觸發所有 Client 端的 'Zombie Check' -> 自動 Reload
             participantsRef.remove();
             assignmentsRef.remove();
-            
-            // 我自己也要清空
             localStorage.clear();
             location.reload();
         }
     }
 
-    // ==========================================
-    // 5. 雪花特效
-    // ==========================================
     setInterval(()=>{
         const s = document.createElement('div');
         s.className = 'snowflake';
@@ -321,7 +303,6 @@
         document.body.appendChild(s);
         setTimeout(() => s.remove(), 6000);
     }, 300);
-
 </script>
 </body>
 </html>
