@@ -239,10 +239,36 @@
     }
     
     let db, participantsRef, assignmentsRef;
-    if(firebase.apps.length) {
+	if(firebase.apps.length) {
         db = firebase.database();
-        participantsRef = db.ref('participants');
-        assignmentsRef = db.ref('assignments');
+
+        // 1. 檢查網址有沒有 'room' 參數
+        const params = new URLSearchParams(window.location.search);
+        const roomId = params.get('room');
+
+        if (roomId) {
+            // ============================
+            // 情況 A：網址有帶房間號碼 (給第二組人用的)
+            // ============================
+            // 資料會存在： "roomName/participants"
+            participantsRef = db.ref(roomId + '/participants');
+            assignmentsRef = db.ref(roomId + '/assignments');
+
+            // 貼心小功能：在副標題顯示房間名稱，避免混淆
+            document.querySelector('.sub-title').innerText += ` (群組: ${roomId})`;
+            
+            console.log("目前使用新房間模式:", roomId);
+
+        } else {
+            // ============================
+            // 情況 B：網址沒有參數 (原本的連結)
+            // ============================
+            // ⚠️ 保持完全不動，確保舊資料庫路徑不變
+            participantsRef = db.ref('participants');
+            assignmentsRef = db.ref('assignments');
+            
+            console.log("目前使用預設(舊)模式");
+        }
     }
 
     const urlParams = new URLSearchParams(window.location.search);
