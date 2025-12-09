@@ -254,8 +254,13 @@
             participantsRef = db.ref(roomId + '/participants');
             assignmentsRef = db.ref(roomId + '/assignments');
 
-            // 貼心小功能：在副標題顯示房間名稱，避免混淆
-            document.querySelector('.sub-title').innerText += ` (群組: ${roomId})`;
+            // 1. 把網址中的底線 "_" 替換成換行符號 "<br>"
+            // 2. 使用 innerHTML 來讓換行生效
+            // 3. 加一點樣式讓群組名獨立一行，顏色設為紅色比較顯眼
+            const displayName = roomId.replace(/_/g, '<br>'); 
+            
+            document.querySelector('.sub-title').innerHTML += 
+                `<div style="color: #ff5555; margin-top: 8px; line-height: 1.4;">${displayName}</div>`;
             
             console.log("目前使用新房間模式:", roomId);
 
